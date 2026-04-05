@@ -1,5 +1,9 @@
-<img src="docs/images/readme_banner.png" />
-Aplicativo de Receitas: Um aplicativo que forneça receitas de culinária com instruções detalhadas, planejamento de refeições e listas de compras.
+<figure>
+  <img src="docs/images/readme_banner.png" />
+  <p align="center">Um aplicativo que fornece receitas de culinária com instruções detalhadas, planejamento de refeições e listas de compras.</p>
+</figure>
+
+<br>
 
 <p align="center">
   |
@@ -66,17 +70,19 @@ Aplicativo de Receitas: Um aplicativo que forneça receitas de culinária com in
 
 ## ⚙️ Manual de Instalação
 
-1. Clone o repositório
-
+**1. Clone o repositório**
 <pre>
 git clone https://github.com/ErikaDias2/Bom-Prato.git
 </pre>
 
-2. Instale as dependencias e rode o aplicativo
+<br>
 
+**2. Instale as dependencias e rode o aplicativo**
 <pre>
 npm install
 npx expo start
 </pre>
 
-3. Baixe o aplicativo Expo Go no celular e escaneie o QR code que aparecerá no terminal após rodar o último comando
+<br>
+
+**3. Baixe o aplicativo Expo Go no celular e escaneie o QR code que aparecerá no terminal após rodar o último comando**
