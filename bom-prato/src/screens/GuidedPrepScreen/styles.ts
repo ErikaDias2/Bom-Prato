@@ -1,0 +1,32 @@
+import { StyleSheet } from 'react-native';
+import { theme } from '../../constants/theme';
+
+export const styles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: theme.colors.card },
+  container: { flex: 1, justifyContent: 'space-between' },
+  progressHeader: { padding: theme.spacing.lg, paddingTop: 12, backgroundColor: theme.colors.card },
+  progressText: { fontSize: 16, fontWeight: 'bold', color: theme.colors.textLight, marginBottom: 12, textAlign: 'center' },
+  progressBarBg: { height: 8, backgroundColor: theme.colors.border, borderRadius: 4, overflow: 'hidden' },
+  progressBarFill: { height: '100%', backgroundColor: theme.colors.primary },
+  mainContent: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32 },
+  instructionText: { fontSize: 28, lineHeight: 40, fontWeight: 'bold', color: theme.colors.text, textAlign: 'center', marginBottom: 40 },
+  timerContainer: { alignItems: 'center' },
+  timerDisplay: { fontSize: 64, fontWeight: 'bold', color: theme.colors.primary, marginBottom: 20, fontFamily: 'monospace' },
+  timerButton: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 32, paddingVertical: 16, borderRadius: 30, gap: 8, elevation: 3 },
+  timerButtonStart: { backgroundColor: theme.colors.primary }, 
+  timerButtonStop: { backgroundColor: theme.colors.secondary },  
+  timerButtonText: { fontSize: 18, fontWeight: 'bold', color: theme.colors.card },
+  footerControls: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingTop: 24, paddingBottom: 40, borderTopWidth: 1, borderColor: theme.colors.border },
+  controlButton: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  controlButtonDisabled: { opacity: 0.5 },
+  controlButtonText: { fontSize: 16, fontWeight: 'bold', color: theme.colors.primary },
+  nextButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: theme.colors.primary, paddingHorizontal: 24, paddingVertical: 14, borderRadius: 25, gap: 8, elevation: 2 },
+  nextButtonText: { fontSize: 18, fontWeight: 'bold', color: theme.colors.card },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 }, 
+  modalContent: { backgroundColor: theme.colors.card, padding: 24, borderRadius: 20 }, 
+  modalTitle: { fontSize: 24, fontWeight: 'bold', color: theme.colors.primary, marginBottom: 8, textAlign: 'center' }, 
+  modalSub: { fontSize: 16, color: theme.colors.textLight, marginBottom: 20, textAlign: 'center' }, 
+  textArea: { backgroundColor: theme.colors.background, padding: 16, borderRadius: 12, fontSize: 16, minHeight: 100, marginBottom: 20, color: theme.colors.text }, 
+  saveHistoryButton: { backgroundColor: theme.colors.success, padding: 16, borderRadius: 12, alignItems: 'center' }, 
+  saveHistoryText: { color: theme.colors.card, fontSize: 18, fontWeight: 'bold' },
+});
