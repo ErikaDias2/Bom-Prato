@@ -37,7 +37,6 @@
 | 2 | Alta | Como usuário, quero configurar minhas alergias e restrições para que o app filtre automaticamente receitas perigosas. | 8 | 1 |
 | 3 | Alta | Como usuário, quero filtrar receitas por categoria, nome, tempo de preparo ou dificuldade para encontrar o que cozinhar. | 5 | 1 |
 | 4 | Alta | Como usuário, quero visualizar os detalhes da receita (ingredientes, preparo, tempo e porções) de forma organizada. | 5 | 1 |
-| 5 | Alta | Como usuário, quero acessar minhas receitas favoritas e histórico mesmo sem internet. | 8 | 1 |
 | 6 | Alta | Como usuário, quero seguir um preparo passo a passo guiado para manter o foco em cada etapa da receita. | 5 | 1 |
 | 7 | Alta | Como usuário, quero acionar timers integrados aos passos da receita para não perder o tempo de cozimento. | 3 | 1 |
 | 8 | Alta | Como usuário, quero ajustar o número de porções para que o app recalcule as quantidades de ingredientes automaticamente. | 5 | 1 |
