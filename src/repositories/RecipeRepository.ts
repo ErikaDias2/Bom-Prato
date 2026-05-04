@@ -14,17 +14,23 @@ export const RecipeRepository = {
   },
 
   getFilteredRecipes: (searchQuery: string, filterCategory: string, filterDifficulty: string, filterTime: number, userAllergies: number[], userPrefs: number[]) => {
-    let query = 'SELECT * FROM recipes';
+    let query = `
+      SELECT r.*, 
+             COALESCE((SELECT AVG(rating) FROM recipe_reviews WHERE recipe_id = r.id), 0) as real_rating
+      FROM recipes r
+    `;
     let params: any[] = [];
     
     if (searchQuery.trim() !== '') {
-      query += ' WHERE title LIKE ? OR ingredients LIKE ?';
+      query += ' WHERE r.title LIKE ? OR r.ingredients LIKE ?';
       params.push(`%${searchQuery}%`, `%${searchQuery}%`);
     }
 
     const rawRecipes = db.getAllSync(query, params);
 
     return rawRecipes.filter((recipe: any) => {
+      recipe.rating = recipe.real_rating;
+
       if (userAllergies.length > 0) {
         const recipeAllergies = JSON.parse(recipe.contains_allergies || '[]');
         if (recipeAllergies.some((a: number) => userAllergies.includes(a))) return false;
@@ -45,8 +51,14 @@ export const RecipeRepository = {
   },
 
   getRecipeById: (id: number) => {
-    const result = db.getFirstSync<any>('SELECT * FROM recipes WHERE id = ?', [id]);
+    const result = db.getFirstSync<any>(`
+      SELECT r.*, 
+             COALESCE((SELECT AVG(rating) FROM recipe_reviews WHERE recipe_id = r.id), 0) as real_rating
+      FROM recipes r WHERE r.id = ?
+    `, [id]);
+
     if (result) {
+      result.rating = result.real_rating;
       result.ingredients = JSON.parse(result.ingredients);
       result.instructions = JSON.parse(result.instructions);
     }
@@ -80,9 +92,15 @@ export const RecipeRepository = {
       }
     }
 
-    const rawRecipes = db.getAllSync('SELECT * FROM recipes WHERE category = ?', [categoryName]);
+    const rawRecipes = db.getAllSync(`
+      SELECT r.*, 
+             COALESCE((SELECT AVG(rating) FROM recipe_reviews WHERE recipe_id = r.id), 0) as real_rating
+      FROM recipes r WHERE r.category = ?
+    `, [categoryName]);
     
     return rawRecipes.filter((recipe: any) => {
+      recipe.rating = recipe.real_rating;
+
       if (allergies.length > 0) {
         const recipeAllergies = JSON.parse(recipe.contains_allergies || '[]');
         if (recipeAllergies.some((a: number) => allergies.includes(a))) return false;
@@ -106,10 +124,83 @@ export const RecipeRepository = {
 
   getFavoriteRecipes: (userId: number) => {
     const query = `
-      SELECT r.* FROM recipes r 
+      SELECT r.*, 
+             COALESCE((SELECT AVG(rating) FROM recipe_reviews WHERE recipe_id = r.id), 0) as real_rating
+      FROM recipes r 
       INNER JOIN user_favorites uf ON r.id = uf.recipe_id 
       WHERE uf.user_id = ?
     `;
-    return db.getAllSync(query, [userId]);
+    const raw = db.getAllSync(query, [userId]);
+    return raw.map((r: any) => {
+      r.rating = r.real_rating;
+      return r;
+    });
   },
+
+  getWeeklyPlan: (userId: number, startDate: string, endDate: string) => {
+    return db.getAllSync<any>(
+      `SELECT mp.id as plan_id, mp.user_id, mp.recipe_id, mp.date, mp.meal_type, r.title, r.image_url, r.time_minutes, r.category, r.ingredients 
+       FROM meal_plan mp
+       JOIN recipes r ON mp.recipe_id = r.id
+       WHERE mp.user_id = ? AND mp.date BETWEEN ? AND ?`,
+      [userId, startDate, endDate]
+    );
+  },
+
+  addToPlan: (userId: number, recipeId: number, date: string, mealType: string) => {
+    return db.runSync(
+      'INSERT INTO meal_plan (user_id, recipe_id, date, meal_type) VALUES (?, ?, ?, ?)',
+      [userId, recipeId, date, mealType]
+    );
+  },
+
+  removeFromPlan: (planId: number) => {
+    return db.runSync('DELETE FROM meal_plan WHERE id = ?', [planId]);
+  },
+
+  getReviews: (recipeId: number) => {
+    return db.getAllSync<any>(
+      `SELECT rr.*, u.name as user_name 
+       FROM recipe_reviews rr 
+       JOIN users u ON rr.user_id = u.id 
+       WHERE rr.recipe_id = ? 
+       ORDER BY rr.created_at DESC`, 
+      [recipeId]
+    );
+  },
+
+  addReview: (recipeId: number, userId: number, rating: number, comment: string) => {
+    const date = new Date().toISOString(); 
+    return db.runSync(
+      'INSERT INTO recipe_reviews (recipe_id, user_id, rating, comment, created_at) VALUES (?, ?, ?, ?, ?)',
+      [recipeId, userId, rating, comment, date]
+    );
+  },
+
+  createRecipe: (userId: number, data: any) => {
+    const result = db.runSync(
+      `INSERT INTO recipes (title, category, time_minutes, difficulty, rating, image_url, base_portions, ingredients, instructions, suitable_for_prefs, contains_allergies) 
+       VALUES (?, ?, ?, ?, 0, ?, ?, ?, ?, '[]', '[]')`,
+      [data.title, data.category, data.time_minutes, data.difficulty, data.image_url, data.base_portions, JSON.stringify(data.ingredients), JSON.stringify(data.instructions)]
+    );
+    db.runSync(
+      'INSERT INTO user_created_recipes (user_id, recipe_id) VALUES (?, ?)',
+      [userId, result.lastInsertRowId]
+    );
+  },
+
+  getUserCreatedRecipes: (userId: number) => {
+    const raw = db.getAllSync<any>(`
+      SELECT r.*, 
+             COALESCE((SELECT AVG(rating) FROM recipe_reviews WHERE recipe_id = r.id), 0) as real_rating
+      FROM recipes r
+      INNER JOIN user_created_recipes ucr ON r.id = ucr.recipe_id
+      WHERE ucr.user_id = ?
+    `, [userId]);
+
+    return raw.map((r: any) => {
+      r.rating = r.real_rating;
+      return r;
+    });
+  }
 };

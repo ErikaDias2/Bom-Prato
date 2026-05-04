@@ -12,12 +12,15 @@ interface RecipeCardProps {
 }
 
 export default function RecipeCard({ title, time, imageUrl, rating, onPress }: RecipeCardProps) {
+  
   const renderStars = (currentRating: number) => {
     const stars = [];
+    const validRating = Math.max(0, currentRating);
+    
     for (let i = 1; i <= 5; i++) {
-      if (i <= currentRating) {
+      if (i <= validRating) {
         stars.push(<Ionicons key={i} name="star" size={16} color="#FFD700" />);
-      } else if (i - 0.5 <= currentRating) {
+      } else if (i - 0.5 <= validRating) {
         stars.push(<Ionicons key={i} name="star-half" size={16} color="#FFD700" />);
       } else {
         stars.push(<Ionicons key={i} name="star-outline" size={16} color="#FFD700" />);
@@ -44,7 +47,7 @@ export default function RecipeCard({ title, time, imageUrl, rating, onPress }: R
         </Text>
         
         <View style={styles.metaContainer}>
-          {rating && (
+          {rating != null && (
             <View style={styles.ratingRow}>
               <View style={styles.starsContainer}>
                 {renderStars(rating)}
@@ -52,6 +55,7 @@ export default function RecipeCard({ title, time, imageUrl, rating, onPress }: R
               <Text style={styles.ratingNumber}>{rating.toFixed(1)}</Text>
             </View>
           )}
+          
           <View style={styles.timeRow}>
             <Ionicons name="time-outline" size={18} />
             <Text style={styles.timeText}>{time}</Text>

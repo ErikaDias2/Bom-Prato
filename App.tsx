@@ -16,6 +16,10 @@ import CategoryScreen from './src/screens/CategoryScreen/index';
 import ProfileScreen from './src/screens/ProfileScreen';
 import RecipeDetailsScreen from './src/screens/RecipeDetailsScreen/index';
 import CategoryRecipesScreen from './src/screens/CategoryRecipesScreen/index';
+import PlannerScreen from './src/screens/PlannerScreen/index'; 
+import ShoppingListScreen from './src/screens/ShoppingListScreen/index';
+import MyRecipesScreen from './src/screens/MyRecipesScreen/index';
+import CreateRecipeScreen from './src/screens/CreateRecipeScreen/index';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -25,14 +29,20 @@ function TabNavigator() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
-          if (route.name === 'Glossário') {
-            return <Ionicons name={focused ? "library" : "library-outline"} size={size} color={color} />;
-          }
-          
           let iconName: any = 'home';
-          if (route.name === 'Início') iconName = focused ? 'home' : 'home-outline';
-          if (route.name === 'Perfil') iconName = focused ? 'person' : 'person-outline';
-          if (route.name === 'Favoritos') iconName = focused ? 'heart' : 'heart-outline';
+          if (route.name === 'Planner') {
+            iconName = focused ? 'calendar' : 'calendar-outline';
+          }
+          if (route.name === 'Início') {
+            iconName = focused ? 'home' : 'home-outline';
+          }
+          if (route.name === 'Perfil') {
+            iconName = focused ? 'person' : 'person-outline';
+          }
+          if (route.name === 'Favoritos') {
+            iconName = focused ? 'heart' : 'heart-outline';
+          }
+          if (route.name === 'Minhas') iconName = focused ? 'book' : 'book-outline';
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
@@ -42,7 +52,8 @@ function TabNavigator() {
       })}
     >
       <Tab.Screen name="Início" component={HomeScreen} />
-      <Tab.Screen name="Glossário" component={GlossaryScreen} />
+      <Tab.Screen name="Minhas" component={MyRecipesScreen} />
+      <Tab.Screen name="Planner" component={PlannerScreen} />
       <Tab.Screen name="Favoritos" component={FavoritesScreen} />
       <Tab.Screen name="Perfil" component={ProfileScreen} />
     </Tab.Navigator>
@@ -80,6 +91,9 @@ export default function App() {
         <Stack.Screen name="GuidedPrep" component={GuidedPrepScreen} options={{ title: 'Modo de Preparo', headerTintColor: '#FF6A00' }} />
         <Stack.Screen name="History" component={HistoryScreen} options={{ title: 'Meu Diário', headerTintColor: '#FF6A00' }} />
         <Stack.Screen name="CategoryScreen" component={CategoryScreen} options={{ title: 'Categorias', headerTintColor: '#FF6A00' }} />
+        <Stack.Screen name="ShoppingList" component={ShoppingListScreen} options={{ title: 'Lista de Compras', headerTintColor: '#FF6A00' }} />
+        <Stack.Screen name="CreateRecipe" component={CreateRecipeScreen} options={{ title: 'Criar Receita', headerTintColor: '#FF6A00' }} />
+        <Stack.Screen name="Glossary" component={GlossaryScreen} options={{ title: 'Glossário', headerTintColor: '#FF6A00' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

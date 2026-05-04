@@ -2,23 +2,32 @@ import { db } from '../services/database';
 
 export const HistoryRepository = {
    
-  saveHistory: (userId: number, recipeId: number, note: string) => {
-    const today = new Date().toLocaleDateString('pt-BR');
-    db.runSync(
-      'INSERT INTO user_history (user_id, recipe_id, cooked_date, notes) VALUES (?, ?, ?, ?)',
-      [userId, recipeId, today, note]
+  saveHistory: (userId: number, recipeId: number, notes: string, imageUrl: string | null = null) => {
+    const dateStr = new Date().toISOString();
+    return db.runSync(
+      'INSERT INTO user_history (user_id, recipe_id, cooked_date, notes, image_url) VALUES (?, ?, ?, ?, ?)',
+      [userId, recipeId, dateStr, notes, imageUrl]
     );
   },
 
    
   getUserHistory: (userId: number) => {
-    const query = `
-      SELECT h.id as history_id, h.cooked_date, h.notes, r.title, r.image_url, r.id as recipe_id 
-      FROM user_history h 
-      INNER JOIN recipes r ON h.recipe_id = r.id 
-      WHERE h.user_id = ? 
-      ORDER BY h.id DESC
-    `;
-    return db.getAllSync(query, [userId]);
-  }
+    return db.getAllSync<any>(
+      `SELECT 
+         uh.id as history_id, 
+         uh.recipe_id, 
+         uh.cooked_date, 
+         uh.notes, 
+         uh.image_url as user_photo_url, 
+         r.title, 
+         r.time_minutes, 
+         r.category,
+         r.image_url as original_recipe_image
+       FROM user_history uh
+       JOIN recipes r ON uh.recipe_id = r.id
+       WHERE uh.user_id = ?
+       ORDER BY uh.cooked_date DESC`,
+      [userId]
+    );
+  },
 };

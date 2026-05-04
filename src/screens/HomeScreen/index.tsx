@@ -14,6 +14,7 @@ export default function HomeScreen() {
   const { isLoggedIn, userId } = useAuthStore();
   
   const [recipes, setRecipes] = useState<any[]>([]);
+  const [seasonalRecipes, setSeasonalRecipes] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   
   const [userFilters, setUserFilters] = useState({ allergies: [], prefs: [] });
@@ -22,6 +23,14 @@ export default function HomeScreen() {
   const [filterCategory, setFilterCategory] = useState('Todas');
   const [filterDifficulty, setFilterDifficulty] = useState('Todas');
   const [filterTime, setFilterTime] = useState(0);
+
+  const getSeasonInfo = () => {
+    const month = new Date().getMonth();
+    if (month >= 2 && month <= 4) return { title: '🍂 Receitas de Outono', keywords: ['Sopa', 'Risoto', 'Lasanha', 'Bolo'] };
+    if (month >= 5 && month <= 7) return { title: '⛄ Receitas de Inverno', keywords: ['Sopa', 'Risoto', 'Lasanha', 'Estrogonofe', 'Feijoada'] };
+    if (month >= 8 && month <= 10) return { title: '🌸 Receitas de Primavera', keywords: ['Salada', 'Frango', 'Mousse', 'Torta'] };
+    return { title: '☀️ Receitas de Verão', keywords: ['Salada', 'Mousse', 'Peixe', 'Limão'] };
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -32,14 +41,19 @@ export default function HomeScreen() {
         searchQuery, filterCategory, filterDifficulty, filterTime, filters.allergies, filters.prefs
       );
       setRecipes(filteredRecipes);
+      const seasonInfo = getSeasonInfo();
+      const seasonals = filteredRecipes.filter((r: any) => 
+        seasonInfo.keywords.some(keyword => r.title.toLowerCase().includes(keyword.toLowerCase()))
+      );
+      setSeasonalRecipes(seasonals.length > 0 ? seasonals : filteredRecipes.slice(0, 3));
 
     }, [isLoggedIn, userId, searchQuery, filterCategory, filterDifficulty, filterTime])
   );
 
   const hasActiveSecurityFilters = userFilters.allergies.length > 0 || userFilters.prefs.length > 0;
-
-  return (
-    <View style={styles.container}>
+  const seasonInfo = getSeasonInfo();
+  const renderHeader = () => (
+    <View>
       {hasActiveSecurityFilters && (
         <View style={styles.safeBanner}>
           <Ionicons name="shield-checkmark" size={16} color={theme.colors.card} />
@@ -52,17 +66,50 @@ export default function HomeScreen() {
           <Ionicons name="search" size={20} color={theme.colors.primary} style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
-            placeholder="O que vamos cozinhar hoje?"
+            placeholder="O que vamos cozinhar?"
             placeholderTextColor={theme.colors.textLight}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
         </View>
+        
+        <TouchableOpacity style={[styles.filterButton]} onPress={() => navigation.navigate('Glossary')}>
+          <Ionicons name="library" size={24} color={theme.colors.card} />
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.filterButton} onPress={() => setShowFilters(true)}>
           <Ionicons name="options" size={24} color={theme.colors.card} />
         </TouchableOpacity>
       </View>
+      {seasonalRecipes.length > 0 && searchQuery === '' && (
+        <View>
+          <Text style={styles.sectionTitle}>{seasonInfo.title}</Text>
+          <FlatList
+            horizontal
+            data={seasonalRecipes}
+            keyExtractor={(item) => `season-${item.id}`}
+            showsHorizontalScrollIndicator={false}
+            renderItem={({ item }) => (
+              <View style={styles.horizontalCardWrapper}>
+                <RecipeCard 
+                  title={item.title} 
+                  time={`${item.time_minutes} min`}
+                  rating={item.rating}
+                  imageUrl={item.image_url}
+                  onPress={() => navigation.navigate('RecipeDetails', { id: item.id })} 
+                />
+              </View>
+            )}
+          />
+        </View>
+      )}
 
+      <Text style={styles.sectionTitle}>Todas as Receitas</Text>
+    </View>
+  );
+
+  return (
+    <View style={styles.container}>
       {recipes.length === 0 ? (
         <View style={styles.center}>
           <Text style={styles.emptyText}>Nenhuma receita encontrada para o seu perfil. 🍳</Text>
@@ -73,6 +120,7 @@ export default function HomeScreen() {
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
+          ListHeaderComponent={renderHeader}
           renderItem={({ item }) => (
             <RecipeCard 
               title={item.title} 
@@ -84,7 +132,6 @@ export default function HomeScreen() {
           )}
         />
       )}
-
       <Modal visible={showFilters} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -98,36 +145,21 @@ export default function HomeScreen() {
             <Text style={styles.filterLabel}>Categoria</Text>
             <View style={styles.chipsRow}>
               {['Todas', 'Almoço', 'Sobremesa', 'Fitness', 'Jantar'].map(cat => (
-                <Chip 
-                  key={cat} 
-                  label={cat} 
-                  isActive={filterCategory === cat} 
-                  onPress={() => setFilterCategory(cat)} 
-                />
+                <Chip key={cat} label={cat} isActive={filterCategory === cat} onPress={() => setFilterCategory(cat)} />
               ))}
             </View>
 
             <Text style={styles.filterLabel}>Dificuldade</Text>
             <View style={styles.chipsRow}>
               {['Todas', 'Fácil', 'Média', 'Difícil'].map(diff => (
-                <Chip 
-                  key={diff} 
-                  label={diff} 
-                  isActive={filterDifficulty === diff} 
-                  onPress={() => setFilterDifficulty(diff)} 
-                />
+                <Chip key={diff} label={diff} isActive={filterDifficulty === diff} onPress={() => setFilterDifficulty(diff)} />
               ))}
             </View>
 
             <Text style={styles.filterLabel}>Tempo Máximo</Text>
             <View style={styles.chipsRow}>
               {[0, 15, 30, 60].map(time => (
-                <Chip 
-                  key={time} 
-                  label={time === 0 ? 'Qualquer' : `Até ${time} min`} 
-                  isActive={filterTime === time} 
-                  onPress={() => setFilterTime(time)} 
-                />
+                <Chip key={time} label={time === 0 ? 'Qualquer' : `Até ${time} min`} isActive={filterTime === time} onPress={() => setFilterTime(time)} />
               ))}
             </View>
 

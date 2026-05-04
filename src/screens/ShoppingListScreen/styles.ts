@@ -1,0 +1,118 @@
+import { StyleSheet } from 'react-native';
+import { theme } from '../../constants/theme';
+
+export const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#FAFAFA' },
+  headerInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFF5F0',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0E6E1',
+  },
+  headerText: {
+    marginLeft: 8,
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: theme.colors.primary,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: theme.colors.textLight,
+  },
+  listContainer: {
+    padding: 20,
+    paddingBottom: 40,
+  },
+  itemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 10,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+  },
+  itemInfo: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginLeft: 12,
+  },
+  itemName: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: theme.colors.text,
+    flex: 1,
+  },
+  itemAmount: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: theme.colors.primary,
+  },
+  textCrossed: {
+    textDecorationLine: 'line-through',
+    color: theme.colors.textLight,
+  },
+  addItemContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: '#FFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEE',
+  },
+  addItemInput: {
+    flex: 1,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    height: 44,
+    marginRight: 10,
+    color: theme.colors.text,
+  },
+  addItemButton: {
+    backgroundColor: theme.colors.primary,
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  customBadge: {
+    fontSize: 12,
+    color: theme.colors.textLight,
+    fontStyle: 'italic',
+  },
+  headerTextContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  shareButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  shareText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginLeft: 4,
+  },
+});

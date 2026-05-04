@@ -8,7 +8,7 @@ export const styles = StyleSheet.create({
   safeBanner: { flexDirection: 'row', backgroundColor: theme.colors.success, padding: theme.spacing.sm, justifyContent: 'center', alignItems: 'center', gap: 6 },
   safeText: { color: theme.colors.card, fontSize: 12, fontWeight: 'bold' },
   
-  topRow: { flexDirection: 'row', alignItems: 'center', margin: theme.spacing.md, gap: 12 },
+  topRow: { flexDirection: 'row', alignItems: 'center', marginVertical: theme.spacing.md, gap: 6 },
   searchContainer: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: theme.colors.card, borderRadius: theme.borderRadius.md, paddingHorizontal: theme.spacing.md, elevation: 2, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 4 },
   searchIcon: { marginRight: theme.spacing.sm },
   searchInput: { flex: 1, height: 48, fontSize: 16, color: theme.colors.text },
@@ -25,5 +25,20 @@ export const styles = StyleSheet.create({
   chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 10 },
   
   applyButton: { backgroundColor: theme.colors.primary, padding: theme.spacing.md, borderRadius: theme.borderRadius.md, alignItems: 'center', marginTop: 20 },
-  applyButtonText: { color: theme.colors.card, fontSize: 18, fontWeight: 'bold' }
+  applyButtonText: { color: theme.colors.card, fontSize: 18, fontWeight: 'bold' },
+
+  seasonContainer: { marginVertical: 10 },
+seasonScroll: { paddingHorizontal: 20, gap: 10 },
+seasonChip: { paddingHorizontal: 16, paddingVertical: 8, backgroundColor: '#FFE4D6', borderRadius: 20, marginRight: 10 },
+seasonText: { color: '#FF6A00', fontWeight: 'bold' },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: theme.colors.text,
+    marginBottom: 12,
+  },
+  horizontalCardWrapper: {
+    width: 280,
+    marginRight: 16,
+  },
 });
