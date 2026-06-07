@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { View, Text, TouchableOpacity, FlatList, Modal, Image, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, Modal, Image, ScrollView, Platform, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import * as Notifications from 'expo-notifications';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useAuthStore } from '../../store/authStore';
 import { RecipeRepository } from '../../repositories/RecipeRepository';
 import { theme } from '../../constants/theme';
@@ -26,6 +28,10 @@ export default function PlannerScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [pickerYear, setPickerYear] = useState(new Date().getFullYear());
+
+  const [selectedRecipe, setSelectedRecipe] = useState<any>(null);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [mealTime, setMealTime] = useState(new Date());
 
   const [selectedMealType, setSelectedMealType] = useState<'breakfast' | 'lunch' | 'dinner' | null>(null);
   const [allRecipes, setAllRecipes] = useState<any[]>([]);
@@ -97,17 +103,113 @@ export default function PlannerScreen() {
     setModalVisible(true);
   };
 
-  const selectRecipeForMeal = (recipe: any) => {
-    if (userId && selectedMealType) {
-      RecipeRepository.addToPlan(userId, recipe.id, selectedDateKey, selectedMealType);
-      setModalVisible(false);
+  const handleSelectRecipe = (recipe: any) => {
+    setSelectedRecipe(recipe);
+    setModalVisible(false);
+    
+    Alert.alert(
+      "Adicionar Lembrete?",
+      "Deseja ser notificado no horário do preparo desta refeição?",
+      [
+        {
+          text: "Não",
+          style: "cancel",
+          onPress: () => saveMealPlan(recipe, false)
+        },
+        {
+          text: "Sim",
+          onPress: () => {
+            const defaultTime = new Date();
+            if (selectedMealType === 'breakfast') defaultTime.setHours(8, 0, 0);
+            else if (selectedMealType === 'lunch') defaultTime.setHours(12, 0, 0);
+            else defaultTime.setHours(19, 0, 0);
+            
+            setMealTime(defaultTime);
+            setShowTimePicker(true); 
+          }
+        }
+      ]
+    );
+  };
+
+  const saveMealPlan = async (recipe: any, scheduleNotification: boolean, timeToSchedule?: Date) => {
+    if (userId && selectedMealType && recipe) {
+      let notificationId = null;
+
+      if (scheduleNotification && timeToSchedule) {
+        const triggerDate = new Date(selectedDate);
+        triggerDate.setHours(timeToSchedule.getHours(), timeToSchedule.getMinutes(), 0, 0);
+
+        if (triggerDate.getTime() > Date.now()) {
+          const mealNames = { breakfast: 'Café da Manhã', lunch: 'Almoço', dinner: 'Jantar' };
+
+          if (Platform.OS === 'android') {
+            const { status } = await Notifications.getPermissionsAsync();
+            if (status !== 'granted') {
+              Alert.alert("Permissão negada", "Ative as notificações nas configurações.");
+              return;
+            }
+          }
+
+          if (Platform.OS === 'android') {
+            await Notifications.setNotificationChannelAsync('default', {
+              name: 'Lembretes de Refeição',
+              importance: Notifications.AndroidImportance.MAX,
+            });
+          }
+          
+          try {
+            notificationId = await Notifications.scheduleNotificationAsync({
+              content: {
+                title: "Hora de Cozinhar! 👨‍🍳",
+                body: `Seu ${mealNames[selectedMealType]} está planejado: ${recipe.title}. Clique para ver a receita.`,
+                data: { recipeStr: JSON.stringify(recipe) },
+              },
+              trigger: {
+                type: Notifications.SchedulableTriggerInputTypes.DATE,
+                date: triggerDate,
+                channelId: 'default',
+              },
+            });
+          } catch (error) {
+            console.error("Erro ao agendar notificação:", error);
+          }
+        } else {
+          Alert.alert("Aviso", "O horário escolhido já passou. A refeição foi salva, mas sem o lembrete.");
+        }
+      }
+
+      RecipeRepository.addToPlan(userId, recipe.id, selectedDateKey, selectedMealType, notificationId);
+      
+      setShowTimePicker(false);
+      setSelectedRecipe(null);
       loadPlan(); 
     }
   };
 
-  const removeRecipeFromMeal = (planId: number) => {
+  const onTimeChange = (event: any, selectedTime?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowTimePicker(false);
+      if (event.type === "set" && selectedTime) {
+        saveMealPlan(selectedRecipe, true, selectedTime);
+      }
+    } else {
+      if (selectedTime) {
+        setMealTime(selectedTime);
+      }
+    }
+  };
+
+  const confirmMealAndNotificationIOS = () => {
+    saveMealPlan(selectedRecipe, true, mealTime);
+  };
+
+  const removeRecipeFromMeal = async (plan: any) => {
     if (userId) {
-      RecipeRepository.removeFromPlan(planId);
+      if (plan.notification_id) {
+        await Notifications.cancelScheduledNotificationAsync(plan.notification_id);
+      }
+      RecipeRepository.removeFromPlan(plan.plan_id);
       loadPlan();
     }
   };
@@ -209,7 +311,6 @@ export default function PlannerScreen() {
           <Text style={styles.shoppingListBtnText}>Gerar Lista de Compras da Semana</Text>
         </TouchableOpacity>
 
-
         <Text style={styles.selectedDateText}>
           Planejamento para {selectedDate.getDate()} de {monthNames[selectedDate.getMonth()]}
         </Text>
@@ -227,7 +328,7 @@ export default function PlannerScreen() {
               {recipesInMeal.map((plan: any) => (
                 <View key={plan.plan_id} style={styles.plannedCard}>
                   <Text style={styles.plannedRecipeTitle}>{plan.title}</Text>
-                  <TouchableOpacity onPress={() => removeRecipeFromMeal(plan.plan_id)}>
+                  <TouchableOpacity onPress={() => removeRecipeFromMeal(plan)}>
                     <Ionicons name="trash-outline" size={20} color={theme.colors.textLight} />
                   </TouchableOpacity>
                 </View>
@@ -249,7 +350,7 @@ export default function PlannerScreen() {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Escolha uma Receita</Text>
-              <TouchableOpacity onPress={() => { setModalVisible(false); setModalCategory('Todas'); }}>
+              <TouchableOpacity onPress={() => { setModalVisible(false); setModalCategory('Todas'); setSelectedRecipe(null); }}>
                 <Ionicons name="close" size={24} color={theme.colors.text} />
               </TouchableOpacity>
             </View>
@@ -279,7 +380,7 @@ export default function PlannerScreen() {
               data={recipesToDisplay}
               keyExtractor={(item) => item.id.toString()}
               renderItem={({ item }) => (
-                <TouchableOpacity style={styles.recipeListItem} onPress={() => selectRecipeForMeal(item)}>
+                <TouchableOpacity style={styles.recipeListItem} onPress={() => handleSelectRecipe(item)}>
                   <Image source={{ uri: item.image_url }} style={styles.recipeListImage} />
                   <View style={styles.recipeListInfo}>
                     <Text style={styles.recipeListTitle}>{item.title}</Text>
@@ -319,6 +420,40 @@ export default function PlannerScreen() {
           </View>
         </View>
       </Modal>
+      {showTimePicker && (
+        <>
+          {Platform.OS === 'ios' ? (
+            <Modal transparent animationType="slide">
+              <View style={styles.modalOverlayCenter}>
+                <View style={[styles.datePickerContent, { alignItems: 'center' }]}>
+                  <Text style={styles.modalTitle}>Horário do Lembrete</Text>
+                  <DateTimePicker
+                    value={mealTime}
+                    mode="time"
+                    display="spinner"
+                    onChange={onTimeChange}
+                  />
+                  <TouchableOpacity style={styles.loginButton} onPress={confirmMealAndNotificationIOS}>
+                    <Text style={styles.loginButtonText}>Confirmar e Salvar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.closePickerBtn, {marginTop: 10}]} onPress={() => { setShowTimePicker(false); setSelectedRecipe(null); }}>
+                    <Text style={styles.closePickerText}>Cancelar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
+          ) : (
+            <DateTimePicker
+              value={mealTime}
+              mode="time"
+              is24Hour={true}
+              display="default"
+              onChange={onTimeChange}
+            />
+          )}
+        </>
+      )}
+
     </View>
   );
 }

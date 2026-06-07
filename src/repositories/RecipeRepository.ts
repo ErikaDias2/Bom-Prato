@@ -1,10 +1,10 @@
-import { db } from '../services/database';
+import { getDb } from '../services/database';
 
 export const RecipeRepository = {
   getUserFilters: (userId: number | null) => {
     if (!userId) return { allergies: [], prefs: [] };
     
-    const user = db.getFirstSync<any>('SELECT allergies, preferences FROM users WHERE id = ?', [userId]);
+    const user = getDb().getFirstSync<any>('SELECT allergies, preferences FROM users WHERE id = ?', [userId]);
     if (!user) return { allergies: [], prefs: [] };
 
     return {
@@ -26,7 +26,7 @@ export const RecipeRepository = {
       params.push(`%${searchQuery}%`, `%${searchQuery}%`);
     }
 
-    const rawRecipes = db.getAllSync(query, params);
+    const rawRecipes = getDb().getAllSync(query, params);
 
     return rawRecipes.filter((recipe: any) => {
       recipe.rating = recipe.real_rating;
@@ -51,7 +51,7 @@ export const RecipeRepository = {
   },
 
   getRecipeById: (id: number) => {
-    const result = db.getFirstSync<any>(`
+    const result = getDb().getFirstSync<any>(`
       SELECT r.*, 
              COALESCE((SELECT AVG(rating) FROM recipe_reviews WHERE recipe_id = r.id), 0) as real_rating
       FROM recipes r WHERE r.id = ?
@@ -66,16 +66,16 @@ export const RecipeRepository = {
   },
 
   isFavorite: (userId: number, recipeId: number) => {
-    const result = db.getFirstSync('SELECT * FROM user_favorites WHERE user_id = ? AND recipe_id = ?', [userId, recipeId]);
+    const result = getDb().getFirstSync('SELECT * FROM user_favorites WHERE user_id = ? AND recipe_id = ?', [userId, recipeId]);
     return !!result;  
   },
 
   toggleFavorite: (userId: number, recipeId: number, isCurrentlyFavorite: boolean) => {
     if (isCurrentlyFavorite) {
-      db.runSync('DELETE FROM user_favorites WHERE user_id = ? AND recipe_id = ?', [userId, recipeId]);
+      getDb().runSync('DELETE FROM user_favorites WHERE user_id = ? AND recipe_id = ?', [userId, recipeId]);
       return false;
     } else {
-      db.runSync('INSERT INTO user_favorites (user_id, recipe_id) VALUES (?, ?)', [userId, recipeId]);
+      getDb().runSync('INSERT INTO user_favorites (user_id, recipe_id) VALUES (?, ?)', [userId, recipeId]);
       return true;
     }
   },
@@ -85,14 +85,14 @@ export const RecipeRepository = {
     let prefs: number[] = [];
 
     if (userId) {
-      const user = db.getFirstSync<any>('SELECT allergies, preferences FROM users WHERE id = ?', [userId]);
+      const user = getDb().getFirstSync<any>('SELECT allergies, preferences FROM users WHERE id = ?', [userId]);
       if (user) {
         allergies = JSON.parse(user.allergies || '[]');
         prefs = JSON.parse(user.preferences || '[]');
       }
     }
 
-    const rawRecipes = db.getAllSync(`
+    const rawRecipes = getDb().getAllSync(`
       SELECT r.*, 
              COALESCE((SELECT AVG(rating) FROM recipe_reviews WHERE recipe_id = r.id), 0) as real_rating
       FROM recipes r WHERE r.category = ?
@@ -115,7 +115,7 @@ export const RecipeRepository = {
   },
 
   getCategories: () => {
-    return db.getAllSync(`
+    return getDb().getAllSync(`
       SELECT category, MIN(image_url) as image_url 
       FROM recipes 
       GROUP BY category
@@ -130,7 +130,7 @@ export const RecipeRepository = {
       INNER JOIN user_favorites uf ON r.id = uf.recipe_id 
       WHERE uf.user_id = ?
     `;
-    const raw = db.getAllSync(query, [userId]);
+    const raw = getDb().getAllSync(query, [userId]);
     return raw.map((r: any) => {
       r.rating = r.real_rating;
       return r;
@@ -138,8 +138,8 @@ export const RecipeRepository = {
   },
 
   getWeeklyPlan: (userId: number, startDate: string, endDate: string) => {
-    return db.getAllSync<any>(
-      `SELECT mp.id as plan_id, mp.user_id, mp.recipe_id, mp.date, mp.meal_type, r.title, r.image_url, r.time_minutes, r.category, r.ingredients 
+    return getDb().getAllSync<any>(
+      `SELECT mp.id as plan_id, mp.user_id, mp.recipe_id, mp.date, mp.meal_type, mp.notification_id, r.title, r.image_url, r.time_minutes, r.category, r.ingredients 
        FROM meal_plan mp
        JOIN recipes r ON mp.recipe_id = r.id
        WHERE mp.user_id = ? AND mp.date BETWEEN ? AND ?`,
@@ -147,19 +147,19 @@ export const RecipeRepository = {
     );
   },
 
-  addToPlan: (userId: number, recipeId: number, date: string, mealType: string) => {
-    return db.runSync(
-      'INSERT INTO meal_plan (user_id, recipe_id, date, meal_type) VALUES (?, ?, ?, ?)',
-      [userId, recipeId, date, mealType]
+  addToPlan: (userId: number, recipeId: number, date: string, mealType: string, notificationId: string | null = null) => {
+    return getDb().runSync(
+      'INSERT INTO meal_plan (user_id, recipe_id, date, meal_type, notification_id) VALUES (?, ?, ?, ?, ?)',
+      [userId, recipeId, date, mealType, notificationId]
     );
   },
 
   removeFromPlan: (planId: number) => {
-    return db.runSync('DELETE FROM meal_plan WHERE id = ?', [planId]);
+    return getDb().runSync('DELETE FROM meal_plan WHERE id = ?', [planId]);
   },
 
   getReviews: (recipeId: number) => {
-    return db.getAllSync<any>(
+    return getDb().getAllSync<any>(
       `SELECT rr.*, u.name as user_name 
        FROM recipe_reviews rr 
        JOIN users u ON rr.user_id = u.id 
@@ -171,26 +171,26 @@ export const RecipeRepository = {
 
   addReview: (recipeId: number, userId: number, rating: number, comment: string) => {
     const date = new Date().toISOString(); 
-    return db.runSync(
+    return getDb().runSync(
       'INSERT INTO recipe_reviews (recipe_id, user_id, rating, comment, created_at) VALUES (?, ?, ?, ?, ?)',
       [recipeId, userId, rating, comment, date]
     );
   },
 
   createRecipe: (userId: number, data: any) => {
-    const result = db.runSync(
+    const result = getDb().runSync(
       `INSERT INTO recipes (title, category, time_minutes, difficulty, rating, image_url, base_portions, ingredients, instructions, suitable_for_prefs, contains_allergies) 
        VALUES (?, ?, ?, ?, 0, ?, ?, ?, ?, '[]', '[]')`,
       [data.title, data.category, data.time_minutes, data.difficulty, data.image_url, data.base_portions, JSON.stringify(data.ingredients), JSON.stringify(data.instructions)]
     );
-    db.runSync(
+    getDb().runSync(
       'INSERT INTO user_created_recipes (user_id, recipe_id) VALUES (?, ?)',
       [userId, result.lastInsertRowId]
     );
   },
 
   getUserCreatedRecipes: (userId: number) => {
-    const raw = db.getAllSync<any>(`
+    const raw = getDb().getAllSync<any>(`
       SELECT r.*, 
              COALESCE((SELECT AVG(rating) FROM recipe_reviews WHERE recipe_id = r.id), 0) as real_rating
       FROM recipes r
@@ -202,5 +202,60 @@ export const RecipeRepository = {
       r.rating = r.real_rating;
       return r;
     });
-  }
+  },
+
+  getRecipesByIngredients: (searchIngredients: string[]) => {
+    if (searchIngredients.length === 0) return [];
+    const allRecipes = getDb().getAllSync<any>('SELECT * FROM recipes');
+    const rankedRecipes = allRecipes.map(recipe => {
+      let matchCount = 0;
+      const recipeIngs = JSON.parse(recipe.ingredients || '[]');
+      const recipeIngNames = recipeIngs.map((i: any) => i.name.toLowerCase());
+
+      searchIngredients.forEach(searchItem => {
+        const term = searchItem.toLowerCase().trim();
+        if (recipeIngNames.some((name: string) => name.includes(term))) {
+          matchCount++;
+        }
+      });
+
+      return { ...recipe, matchCount };
+    }).filter(r => r.matchCount > 0);
+    return rankedRecipes.sort((a, b) => b.matchCount - a.matchCount);
+  },
+
+  isSavedOffline: (userId: number, recipeId: number) => {
+    const result = getDb().getFirstSync(
+      'SELECT * FROM user_saved_offline WHERE user_id = ? AND recipe_id = ?',
+      [userId, recipeId]
+    );
+    return !!result;
+  },
+
+  toggleSaveOffline: (userId: number, recipeId: number, isCurrentlySaved: boolean) => {
+    const now = new Date().toISOString();
+    if (isCurrentlySaved) {
+      getDb().runSync('DELETE FROM user_saved_offline WHERE user_id = ? AND recipe_id = ?', [userId, recipeId]);
+      return false;
+    } else {
+      getDb().runSync('INSERT INTO user_saved_offline (user_id, recipe_id, saved_at) VALUES (?, ?, ?)', [userId, recipeId, now]);
+      return true;
+    }
+  },
+
+  getOfflineRecipes: (userId: number) => {
+    const query = `
+      SELECT r.*, 
+             COALESCE((SELECT AVG(rating) FROM recipe_reviews WHERE recipe_id = r.id), 0) as real_rating
+      FROM recipes r 
+      INNER JOIN user_saved_offline uso ON r.id = uso.recipe_id 
+      WHERE uso.user_id = ?
+      ORDER BY uso.saved_at DESC
+    `;
+    const raw = getDb().getAllSync(query, [userId]);
+    return raw.map((r: any) => {
+      r.rating = r.real_rating;
+      return r;
+    });
+  },
 };

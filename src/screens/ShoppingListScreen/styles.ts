@@ -6,7 +6,7 @@ export const styles = StyleSheet.create({
   headerInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-around',
     backgroundColor: '#FFF5F0',
     paddingVertical: 12,
     borderBottomWidth: 1,
@@ -82,7 +82,6 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 16,
     height: 44,
     marginRight: 10,
-    color: theme.colors.text,
   },
   addItemButton: {
     backgroundColor: theme.colors.primary,
@@ -105,7 +104,7 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: theme.colors.primary,
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,
   },

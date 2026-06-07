@@ -38,7 +38,7 @@ export default function LoginScreen() {
       
       { }
       <Image 
-        source={require('../../../assets/logo-branco.png')}
+        source={require('../../../assets/icon.png')}
         style={styles.logo} 
         contentFit="contain" 
         transition={300}

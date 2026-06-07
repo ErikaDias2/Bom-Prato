@@ -1,7 +1,16 @@
 import * as SQLite from 'expo-sqlite';
 import { INITIAL_RECIPES_DATA } from '../data/initialRecipes';
 
-export const db = SQLite.openDatabaseSync('bomprato_v6.db');
+let db = SQLite.openDatabaseSync('bomprato_v6.db');
+
+export const getDb = () => db;
+
+export const reopenDatabase = () => {
+  try {
+    db.closeSync();
+  } catch {}
+  db = SQLite.openDatabaseSync('bomprato_v6.db');
+};
 
 const CREATE_TABLES_QUERY = `
   PRAGMA journal_mode = WAL;
@@ -41,6 +50,7 @@ const CREATE_TABLES_QUERY = `
     user_id INTEGER NOT NULL,
     recipe_id INTEGER NOT NULL,
     date TEXT NOT NULL, 
+    notification_id TEXT,
     meal_type TEXT NOT NULL,
     FOREIGN KEY(user_id) REFERENCES users(id),
     FOREIGN KEY(recipe_id) REFERENCES recipes(id)
@@ -64,6 +74,30 @@ const CREATE_TABLES_QUERY = `
     FOREIGN KEY(user_id) REFERENCES users(id), 
     FOREIGN KEY(recipe_id) REFERENCES recipes(id)
   );
+
+  CREATE TABLE IF NOT EXISTS category_recipes (
+    category_id INTEGER,
+    recipe_id INTEGER,
+    PRIMARY KEY (category_id, recipe_id),
+    FOREIGN KEY(category_id) REFERENCES user_custom_categories(id) ON DELETE CASCADE,
+    FOREIGN KEY(recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
+  );
+
+  CREATE TABLE IF NOT EXISTS user_custom_categories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    FOREIGN KEY(user_id) REFERENCES users(id)
+  );
+
+  CREATE TABLE IF NOT EXISTS user_saved_offline (
+    user_id INTEGER,
+    recipe_id INTEGER,
+    saved_at TEXT NOT NULL,
+    PRIMARY KEY (user_id, recipe_id),
+    FOREIGN KEY(user_id) REFERENCES users(id),
+    FOREIGN KEY(recipe_id) REFERENCES recipes(id)
+  );
 `;
 
 const INSERT_PREFS_QUERY = `
@@ -77,19 +111,20 @@ const INSERT_RECIPE_QUERY = `
 `;
 
 export const initDatabase = () => {
-  db.execSync(CREATE_TABLES_QUERY);
+  getDb().execSync(CREATE_TABLES_QUERY);
 
-  try { db.execSync('ALTER TABLE user_history ADD COLUMN image_url TEXT;'); } catch (e) {}
+  try { getDb().execSync('ALTER TABLE user_history ADD COLUMN image_url TEXT;'); } catch (e) {}
+  try { getDb().execSync('ALTER TABLE meal_plan ADD COLUMN notification_id TEXT;'); } catch (e) {}
 
-  const prefsCount = db.getFirstSync<{ count: number }>('SELECT COUNT(*) as count FROM preferences');
+  const prefsCount = getDb().getFirstSync<{ count: number }>('SELECT COUNT(*) as count FROM preferences');
   if (prefsCount && prefsCount.count === 0) {
-    db.execSync(INSERT_PREFS_QUERY);
+    getDb().execSync(INSERT_PREFS_QUERY);
   }
   
-  const recipesCount = db.getFirstSync<{ count: number }>('SELECT COUNT(*) as count FROM recipes');
+  const recipesCount = getDb().getFirstSync<{ count: number }>('SELECT COUNT(*) as count FROM recipes');
   if (recipesCount && recipesCount.count === 0) {
     INITIAL_RECIPES_DATA.forEach(r => {
-      db.runSync(
+      getDb().runSync(
         INSERT_RECIPE_QUERY,
         [r.title, r.category, r.time_minutes, r.difficulty, r.rating, r.image_url, r.base_portions, r.ingredients, r.instructions, r.suitable_for_prefs, r.contains_allergies]
       );

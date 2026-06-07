@@ -1,10 +1,10 @@
-import { db } from '../services/database';
+import { getDb } from '../services/database';
 
 export const HistoryRepository = {
    
   saveHistory: (userId: number, recipeId: number, notes: string, imageUrl: string | null = null) => {
     const dateStr = new Date().toISOString();
-    return db.runSync(
+    return getDb().runSync(
       'INSERT INTO user_history (user_id, recipe_id, cooked_date, notes, image_url) VALUES (?, ?, ?, ?, ?)',
       [userId, recipeId, dateStr, notes, imageUrl]
     );
@@ -12,7 +12,7 @@ export const HistoryRepository = {
 
    
   getUserHistory: (userId: number) => {
-    return db.getAllSync<any>(
+    return getDb().getAllSync<any>(
       `SELECT 
          uh.id as history_id, 
          uh.recipe_id, 

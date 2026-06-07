@@ -78,23 +78,22 @@ export default function CreateRecipeScreen() {
     setIsSaving(true);
 
     try {
-      const fileName = `recipe_${Date.now()}.jpg`;
-      const permanentDirectory = FileSystem.documentDirectory + 'user_recipes/';
-      const permanentUri = permanentDirectory + fileName;
+      const base64 = await FileSystem.readAsStringAsync(imageUri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      const imageData = `data:image/jpeg;base64,${base64}`;
 
-      const dirInfo = await FileSystem.getInfoAsync(permanentDirectory);
-      if (!dirInfo.exists) await FileSystem.makeDirectoryAsync(permanentDirectory, { intermediates: true });
-
-      await FileSystem.copyAsync({ from: imageUri, to: permanentUri });
-
-      const parsedIngredients = ingredients.map(i => ({ ...i, amount: parseFloat(i.amount.replace(',', '.')) }));
+      const parsedIngredients = ingredients.map(i => ({
+        ...i,
+        amount: parseFloat(i.amount.replace(',', '.'))
+      }));
       const parsedInstructions = instructions.map(i => ({
         text: i.text,
         timer_seconds: i.timer_minutes ? parseInt(i.timer_minutes) * 60 : null
       }));
 
       RecipeRepository.createRecipe(userId!, {
-        title, category, difficulty, image_url: permanentUri,
+        title, category, difficulty, image_url: imageData,
         time_minutes: parseInt(time), base_portions: parseInt(portions),
         ingredients: parsedIngredients, instructions: parsedInstructions
       });
@@ -156,8 +155,8 @@ export default function CreateRecipeScreen() {
         </View>
 
         <View style={styles.row}>
-          <TextInput style={[styles.input, styles.halfInput]} placeholder="Tempo (min)" keyboardType="numeric" value={time} onChangeText={setTime} />
-          <TextInput style={[styles.input, styles.halfInput]} placeholder="Rendimento (Porções)" keyboardType="numeric" value={portions} onChangeText={setPortions} />
+          <TextInput style={[styles.input, styles.halfInput]} placeholder="Tempo em minutos" keyboardType="numeric" value={time} onChangeText={setTime} />
+          <TextInput style={[styles.input, styles.halfInput]} placeholder="Porções" keyboardType="numeric" value={portions} onChangeText={setPortions} />
         </View>
 
         <Text style={styles.sectionTitle}>Ingredientes</Text>
@@ -171,7 +170,7 @@ export default function CreateRecipeScreen() {
               <Ionicons name="caret-down" size={14} color={theme.colors.textLight} />
             </TouchableOpacity>
 
-            <TextInput style={[styles.input, { flex: 2 }]} placeholder="Ingrediente (ex: Açúcar)" value={ing.name} onChangeText={(t) => updateIngredient(t, index, 'name')} />
+            <TextInput style={[styles.input, { flex: 2 }]} placeholder="Ingrediente" value={ing.name} onChangeText={(t) => updateIngredient(t, index, 'name')} />
             {ingredients.length > 1 && (
               <TouchableOpacity onPress={() => setIngredients(ingredients.filter((_, i) => i !== index))} style={styles.deleteBtn}>
                 <Ionicons name="trash-outline" size={20} color="#FF5252" />
