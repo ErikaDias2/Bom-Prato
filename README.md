@@ -57,15 +57,15 @@
 | 21 | Média | Como usuário, quero avaliar com estrelas e deixar comentários nas receitas para registrar meu feedback. | 3 | 2 |
 | 22 | Média | Como usuário, quero cadastrar minhas próprias receitas completas para centralizar meu caderno de receitas no app. | 8 | 2 |
 | 23 | Média | Como usuário, quero usar a câmera para registrar fotos dos meus pratos prontos e anexá-los ao meu histórico. | 5 | 2 |
+| 27 | Baixa | Como usuário, quero receber notificações agendadas para iniciar o preparo das refeições do meu plano. | 5 | 3 |
 | 24 | Média | Como usuário, quero ver sugestões de substituição para ingredientes que não tenho em casa no momento. | 5 | 3 |
 | 25 | Baixa | Como usuário, quero informar o que tenho na geladeira para que o app sugira receitas compatíveis. | 8 | 3 |
 | 26 | Baixa | Como usuário, quero iniciar múltiplos timers simultaneamente para diferentes etapas de uma receita complexa. | 5 | 3 |
-| 27 | Baixa | Como usuário, quero receber notificações agendadas para iniciar o preparo das refeições do meu plano. | 5 | 3 |
-| 28 | Baixa | Como usuário, quero baixar receitas para aceder em modo Off-line (armazenamento local). | 8 | 3 |
-| 29 | Baixa | Como usuário, quero fazer backup e restauração dos meus dados (receitas, planos, listas) para não perdê-los. | 5 | 3 |
-| 30 | Baixa | Como usuário, quero usar comandos de voz (Mãos Livres) para navegar no preparo guiado sem tocar no ecrã. | 8 | 3 |
+| 28 | Baixa | Como usuário, quero baixar receitas para acessar em modo off-line. | 8 | 3 |
+| 30 | Baixa | Como usuário, quero usar comandos de voz (Mãos Livres) para navegar no preparo guiado. | 8 | 3 |
 | 31 | Baixa | Como usuário, quero adicionar itens à lista de compras usando comandos de voz por praticidade. | 5 | 3 |
 | 32 | Baixa | Como usuário, quero criar minhas próprias categorias personalizadas para organizar minhas receitas. | 3 | 3 |
+| 29 | Baixa | Como usuário, quero fazer backup e restauração dos meus dados (receitas, planos, listas) para não perdê-los. | 5 | 3 |
 
 
 <br>
